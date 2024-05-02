@@ -1,0 +1,38 @@
+html, body {
+    width:  100%;
+    margin: 0;
+    background-color: black;
+}
+
+canvas {
+    width: 100%;
+    display: block;
+}
+
+@font-face {
+    font-family: 'Chocolates';
+    font-style: normal;
+    font-weight: normal;
+    src: url('resources/fonts/TT Chocolates Trial Regular.otf');
+}
+
+@font-face {
+    font-family: 'Chocolates';
+    font-style: normal;
+    font-weight: bold;
+    src: url('resources/fonts/TT Chocolates Trial Bold.otf');
+}
+
+@font-face {
+    font-family: 'Chocolates';
+    font-style: italic;
+    font-weight: normal;
+    src: url('resources/fonts/TT Chocolates Trial Italic.otf');
+}
+
+@font-face {
+    font-family: 'Chocolates';
+    font-style: italic;
+    font-weight: bold;
+    src: url('resources/fonts/TT Chocolates Trial Bold italic.otf');
+}
