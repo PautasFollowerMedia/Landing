@@ -1,15 +1,27 @@
 import Bubbles from './modules/bubbles/bubbles.js';
+import AnimatedImage from "./modules/animatedImage/animatedImage.js";
 
 const body = document.getElementById("body");
 
-const mainCanvas = document.getElementById("main_canvas");
-const mainCtx = mainCanvas.getContext("2d");
+let isInitialized = false;
+
+const headerCanvas = document.getElementById("main_canvas");
+const headerCtx = headerCanvas.getContext("2d");
+let headerIntroAnimation;
+let headerLoopAnimation;
+let headerIntroEnded = false;
 
 const bubblesCanvas = document.getElementById("bubbles_canvas");
 const bubblesCtx = bubblesCanvas.getContext("2d");
 
 const whatwedoCanvas = document.getElementById("whatwedo_canvas");
 const whatwedoCtx = whatwedoCanvas.getContext("2d");
+let staticDonut;
+let clockwiseDonut;
+let counterClockwiseDonut;
+const donutSize = 800;
+let turnDonutClockwise = document.getElementById("clockwise");
+let turnDonutCounterClockwise = document.getElementById("counterClockwise");
 
 let elapsed = 0;
 let lastElapsed = 0;
@@ -27,6 +39,13 @@ let whatwedoBackgroundColor = "#1C151D";
 
 let bubbles;
 
+const E_donutState = Object.freeze({
+    idle: 0,
+    clockwise: 1,
+    counterClockwise: 2
+});
+let donutState = E_donutState.idle;
+
 const isElementVisibleInViewport = (el, partiallyVisible = false) => {
     const { top, left, bottom, right } = el.getBoundingClientRect();
     const { innerHeight, innerWidth } = window;
@@ -38,6 +57,15 @@ const isElementVisibleInViewport = (el, partiallyVisible = false) => {
         :   top >= 0 && left >= 0 && bottom <= innerHeight
         && right <= innerWidth;
 };
+
+function renderHeader() {
+    if (!headerIntroEnded && headerIntroAnimation) {
+        headerIntroAnimation.render(headerCtx, deltaTime, {x: 0, y: 0});
+    }
+    else if (headerIntroEnded && headerLoopAnimation) {
+        headerLoopAnimation.render(headerCtx, deltaTime, {x: 0, y: 0});
+    }
+}
 
 function bwp(p) {
     return bubblesCanvas.width * p
@@ -88,46 +116,67 @@ function bubbleSloganAnimation() {
 function renderWhatwedo() {
     whatwedoCtx.fillStyle = whatwedoBackgroundColor;
     whatwedoCtx.fillRect(0, 0, whatwedoCanvas.width, whatwedoCanvas.height);
+
+    switch (donutState) {
+        case E_donutState.idle:
+            if (staticDonut) {
+                staticDonut.render(whatwedoCtx, deltaTime, { x: -donutSize * 0.3, y: 0});
+            }
+            break;
+        case E_donutState.clockwise:
+            if (clockwiseDonut) {
+                clockwiseDonut.render(whatwedoCtx, deltaTime, { x: -donutSize * 0.3, y: 0});
+            }
+            break;
+        case E_donutState.counterClockwise:
+            if (counterClockwiseDonut) {
+                counterClockwiseDonut.render(whatwedoCtx, deltaTime, { x: -donutSize * 0.3, y: 0});
+            }
+            break;
+    }
 }
 
 const resizeObserver = new ResizeObserver(() => {
     let sumHeight = 0;
 
-    mainCanvas.width = mainCanvas.clientWidth;
-    mainCanvas.height = mainCanvas.clientWidth * 9 / 16;
+    headerCanvas.width = headerCanvas.clientWidth;
+    headerCanvas.height = headerCanvas.clientWidth * 9 / 16;
 
-    sumHeight += mainCanvas.height;
+    sumHeight += headerCanvas.height;
 
-    img = new Image(mainCanvas.width, mainCanvas.height);
-    img.src = "./resources/landing/1.png";
-    img.onload = function () {
-        mainCtx.drawImage(img, 0, 0, mainCanvas.clientWidth, mainCanvas.clientWidth * 9 / 16);
-        console.log(mainCanvas.width + ' ' + mainCanvas.height)
-    };
+    // img = new Image(mainCanvas.width, mainCanvas.height);
+    // img.src = "./resources/landing/1.png";
+    // img.onload = function () {
+    //     mainCtx.drawImage(img, 0, 0, mainCanvas.clientWidth, mainCanvas.clientWidth * 9 / 16);
+    //     console.log('canvas size ' + mainCanvas.width + ' ' + mainCanvas.height);
+    // };
 
-    bubblesCanvas.width = mainCanvas.width;
-    bubblesCanvas.height = mainCanvas.height * 0.7;
+    renderHeader();
+
+    bubblesCanvas.width = headerCanvas.width;
+    bubblesCanvas.height = headerCanvas.height * 0.7;
     renderBubbleSlogan();
 
     sumHeight += bubblesCanvas.height;
 
-    whatwedoCanvas.width = mainCanvas.width;
-    whatwedoCanvas.height = mainCanvas.height;
+    whatwedoCanvas.width = headerCanvas.width;
+    whatwedoCanvas.height = 800;
     renderWhatwedo();
 
     sumHeight += whatwedoCanvas.height;
 
     body.height = sumHeight;
 
-    if (bubbles == null)
-        bubbles = new Bubbles(bubblesCanvas.width, bubblesCanvas.height, bubblesCtx);
-    else
-        bubbles.updateExtends(bubblesCanvas.width, bubblesCanvas.height);
+    init();
+
+    bubbles.updateExtends(bubblesCanvas.width, bubblesCanvas.height);
 })
 
 function render(time) {
     elapsed = time / 1000.0;
     deltaTime = elapsed - lastElapsed;
+
+    renderHeader();
 
     const {width, height} = bubblesCanvas;
     bubblesCtx.clearRect(0, 0, width, height);
@@ -146,29 +195,97 @@ function scroll() {
     const isBubbleCanvasVisible = isElementVisibleInViewport(bubblesCanvas);
     const isWhatwedoCanvasVisible = isElementVisibleInViewport(whatwedoCanvas);
 
-    if (isBubbleCanvasVisible) {
-        bubbleBackgroundColor = "#1C151D";
-        if (!isBubbleSloganAnimationActive && !isBubbleElementVisible) {
-            isBubbleSloganAnimationActive = true;
-            isBubbleElementVisible = true;
-        }
-    }
-    else {
-        bubbleBackgroundColor = "#FF0000";
-    }
+    /* Debug */
+    // if (isBubbleCanvasVisible) {
+    //     bubbleBackgroundColor = "#1C151D";
+    //     if (!isBubbleSloganAnimationActive && !isBubbleElementVisible) {
+    //         isBubbleSloganAnimationActive = true;
+    //         isBubbleElementVisible = true;
+    //     }
+    // }
+    // else {
+    //     bubbleBackgroundColor = "#FF0000";
+    // }
 
-    if (isWhatwedoCanvasVisible) {
-        whatwedoBackgroundColor = "#1C151D";
-    } else {
-        whatwedoBackgroundColor = "#0000ff";
-    }
+    // if (isWhatwedoCanvasVisible) {
+    //     whatwedoBackgroundColor = "#1C151D";
+    // } else {
+    //     whatwedoBackgroundColor = "#0000ff";
+    // }
 }
 
 function start() {
-    resizeObserver.observe(mainCanvas);
+    resizeObserver.observe(headerCanvas);
     addEventListener("scroll", scroll);
     scroll();
     requestAnimationFrame(render);
+}
+
+function init() {
+    if (isInitialized) {
+        return;
+    }
+
+    headerIntroAnimation = new AnimatedImage(
+        { x: headerCanvas.width, y: headerCanvas.height },
+        './resources/landing/',
+        1,
+        71,
+        24,
+        false,
+        () => {
+            headerIntroEnded = true;
+        }
+    );
+
+    headerLoopAnimation = new AnimatedImage(
+        { x: headerCanvas.width, y: headerCanvas.height },
+        './resources/landing/',
+        71,
+        201 - 71,
+        24,
+        true
+    );
+
+    bubbles = new Bubbles(bubblesCanvas.width, bubblesCanvas.height, bubblesCtx);
+
+    staticDonut = new AnimatedImage(
+        { x: donutSize, y: donutSize },
+        './resources/donut/',
+        40,
+        1,
+        24,
+        true
+    );
+    clockwiseDonut = new AnimatedImage(
+        { x: donutSize, y: donutSize },
+        './resources/donut/',
+        63,
+        22,
+        24,
+        false,
+        () => { }
+    );
+    counterClockwiseDonut = new AnimatedImage(
+        { x: donutSize, y: donutSize },
+        './resources/donut/',
+        40,
+        22,
+        24,
+        false,
+        () => { }
+    );
+
+    turnDonutClockwise.onclick = () => {
+        donutState = E_donutState.clockwise;
+        clockwiseDonut.reset();
+    }
+    turnDonutCounterClockwise.onclick = () => {
+        donutState = E_donutState.counterClockwise;
+        counterClockwiseDonut.reset();
+    }
+
+    isInitialized = true;
 }
 
 /* Start */

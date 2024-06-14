@@ -1,0 +1,14 @@
+{
+  "name": "animatedimage",
+  "version": "1.0.0",
+  "description": "",
+  "main": "animatedImage.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/PautasFollowerMedia/Landing.git"
+  },
+  "private": true
+}
