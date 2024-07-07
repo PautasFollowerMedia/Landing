@@ -35,7 +35,7 @@ let isBubbleElementVisible = false;
 let isBubbleSloganAnimationActive = false;
 let bubbleAnimationElapsed = 0.0;
 let bubbleAnimationDuration = 2.0;
-let whatwedoBackgroundColor = "#1C151D";
+let whatwedoBackgroundColor = "#1c151d";
 
 let bubbles;
 
